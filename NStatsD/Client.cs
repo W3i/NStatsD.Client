@@ -70,7 +70,7 @@ namespace NStatsD
             }
 
             Dictionary<string, string> sampledData;
-            if (sampleRate < 1 && _random.Next(0, 1) <= sampleRate)
+            if (sampleRate < 1 && _random.NextDouble() <= sampleRate)
             {
                 sampledData = new Dictionary<string, string>();
                 foreach (var stat in data.Keys)
