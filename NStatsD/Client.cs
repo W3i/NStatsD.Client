@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace NStatsD
 {
@@ -59,8 +60,7 @@ namespace NStatsD
             Send(dictionary, sampleRate);
         }
 
-        [ThreadStatic]
-        private static Random _random = new Random();
+        private static readonly ThreadLocal<Random> _random = new ThreadLocal<Random>(() => new Random());
 
         private void Send(Dictionary<string, string> data, double sampleRate = 1)
         {
@@ -70,7 +70,7 @@ namespace NStatsD
             }
 
             Dictionary<string, string> sampledData;
-            if (sampleRate < 1 && _random.NextDouble() <= sampleRate)
+            if (sampleRate < 1 && _random.Value.NextDouble() <= sampleRate)
             {
                 sampledData = new Dictionary<string, string>();
                 foreach (var stat in data.Keys)
