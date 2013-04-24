@@ -78,9 +78,14 @@ namespace NStatsD
                     sampledData.Add(stat, string.Format("{0}|@{1}", data[stat], sampleRate));
                 }
             }
-            else
+            else if (sampleRate >= 1)
             {
                 sampledData = data;
+            }
+            else
+            {
+                // Didn't meet the sample criteria; don't send anything to StatsD.
+                return;
             }
 
             var host = Config.Server.Host;
