@@ -35,7 +35,7 @@ namespace NStatsD
         {
             var data = new Dictionary<string, string> { { stat, string.Format("{0}|ms", time) } };
 
-            Send(data, sampleRate);
+            SendConsideringSampleRate(data, sampleRate);
         }
 
         public void Increment(string stat, double sampleRate = 1)
@@ -48,21 +48,21 @@ namespace NStatsD
             UpdateStats(stat, -1, sampleRate);
         }
 
-        public void Gauge(string stat, int value, double sampleRate = 1)
+        public void Gauge(string stat, int value)
         {
             var data = new Dictionary<string, string> {{stat, string.Format("{0}|g", value)}};
-            Send(data, sampleRate);
+            SendWithoutSampleRate(data);
         }
 
         public void UpdateStats(string stat, int delta = 1, double sampleRate = 1)
         {
             var dictionary = new Dictionary<string, string> {{stat, string.Format("{0}|c", delta)}};
-            Send(dictionary, sampleRate);
+            SendConsideringSampleRate(dictionary, sampleRate);
         }
 
         private static readonly ThreadLocal<Random> _random = new ThreadLocal<Random>(() => new Random());
 
-        private void Send(Dictionary<string, string> data, double sampleRate = 1)
+        private void SendConsideringSampleRate(Dictionary<string, string> data, double sampleRate = 1)
         {
             if (Config == null)
             {
@@ -88,6 +88,21 @@ namespace NStatsD
                 return;
             }
 
+            ConnectAndSendDataOverUdp(sampledData);
+        }
+
+        private void SendWithoutSampleRate(Dictionary<string, string> data)
+        {
+            if (Config == null)
+            {
+                return;
+            }
+
+            ConnectAndSendDataOverUdp(data);
+        }
+
+        private void ConnectAndSendDataOverUdp(Dictionary<string, string> sampledData)
+        {
             var host = Config.Server.Host;
             var port = Config.Server.Port;
             using (var client = new UdpClient(host, port))
